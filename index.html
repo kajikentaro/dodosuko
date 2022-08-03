@@ -1,0 +1,194 @@
+<html>
+  <head>
+    <title>ドドスコ</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+  </head>
+  <body>
+    <div>
+      <div class="progress-wrapper">
+        <span id="progress0">ドド</span>
+        <span id="progress1">スコ</span>
+        <span id="progress2">スコ</span>
+        <span id="progress3">スコ</span>
+      </div>
+      <div class="progress-wrapper">
+        <span id="progress4">ドド</span>
+        <span id="progress5">スコ</span>
+        <span id="progress6">スコ</span>
+        <span id="progress7">スコ</span>
+      </div>
+      <div class="progress-wrapper">
+        <span id="progress8">ドド</span>
+        <span id="progress9">スコ</span>
+        <span id="progress10">スコ</span>
+        <span id="progress11">スコ</span>
+      </div>
+      <audio id="dodoAudio" src="/dodo.wav"></audio>
+      <audio id="dodoAudio2" src="/dodo.wav"></audio>
+      <audio id="sukoAudio" src="/suko.wav"></audio>
+      <audio id="sukoAudio2" src="/suko.wav"></audio>
+      <audio id="injectionLoveAudio" src="/love.wav"></audio>
+    </div>
+    <button id="playAudio">音声再生</button>
+    <p id="injectionLove" class="injection-love">ラブ注入</p>
+  </body>
+  <style>
+    .progress-wrapper {
+      width: 100%;
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    span {
+      display: block;
+      width: 100%;
+      height: 100px;
+      background-color: #000;
+      text-align: center;
+      line-height: 100px;
+      font-size: 50px;
+      font-weight: bolder;
+      color: black;
+    }
+    .injection-love {
+      display: block;
+      width: 100%;
+      font-size: 150px;
+      font-weight: bold;
+      text-align: center;
+      color: white;
+      padding: 100px 0;
+      margin: 0;
+      background-color: #f53;
+      display: none;
+    }
+    @media screen and (max-width: 640px) {
+      span {
+        font-size: 10vw;
+      }
+      .injection-love {
+        padding: 50px 0;
+        font-size: 20vw;
+      }
+    }
+  </style>
+  <script>
+    window.onload = main;
+
+    let debug = 0;
+    let isPlayAudio = false;
+    const INTERVAL_TIME = 450;
+    const DODOSUKO_ANSWER = 0b111011101110;
+
+    function main() {
+      setupAudioPlayBtn();
+
+      let bit = Math.floor(Math.random() * 2);
+      if (debug) {
+        bit = (DODOSUKO_ANSWER >> (debug - 1)) & 1;
+        debug++;
+      }
+
+      if (isPlayAudio) {
+        if (bit == 0) {
+          playDodoAudio();
+        } else {
+          playSukoAudio();
+        }
+      }
+
+      const isInjectionLove = updateProgress(bit);
+      if (!isInjectionLove) {
+        setTimeout(main, INTERVAL_TIME);
+      }
+    }
+
+    function setupAudioPlayBtn() {
+      const playAudioBtn = document.getElementById("playAudio");
+      playAudioBtn.onclick = () => {
+        playAudioBtn.style.display = "none";
+        isPlayAudio = true;
+      };
+    }
+
+    let correctCount = 0;
+    function updateProgress(bit) {
+      if (((DODOSUKO_ANSWER >> correctCount) & 1) == bit) {
+        correctCount++;
+      } else {
+        if (correctCount > 0) {
+          correctCount = 0;
+          updateProgress(bit);
+          return false;
+        }
+        correctCount = 0;
+      }
+
+      updateProgressView(correctCount);
+      if (correctCount == 12) {
+        setTimeout(() => {
+          if (isPlayAudio) playInjectionLoveAudio();
+          document.getElementById("injectionLove").style.display = "block";
+        }, INTERVAL_TIME);
+        return true;
+      }
+      return false;
+    }
+
+    function updateProgressView(correctCount) {
+      if (correctCount == 1) {
+        // correctCountが1の場合はチカチカさせる
+        const progress = document.getElementById(`progress${0}`);
+        progress.style.backgroundColor = "#000";
+        progress.style.color = "#000";
+        setTimeout(() => {
+          const progress = document.getElementById(`progress${0}`);
+          progress.style.backgroundColor = "#f53";
+          progress.style.color = "#fff";
+        }, 100);
+      } else if (correctCount > 1) {
+        const progress = document.getElementById(`progress${correctCount - 1}`);
+        progress.style.backgroundColor = "#f53";
+        progress.style.color = "#fff";
+      }
+
+      // correctCount移行のものは黒にリセット
+      for (let i = correctCount; i < 12; i++) {
+        const progress = document.getElementById(`progress${i}`);
+        progress.style.backgroundColor = "#000";
+        progress.style.color = "#000";
+      }
+    }
+
+    let nextDodoIdx = 0;
+    function playDodoAudio() {
+      const dodoAudio = [
+        document.getElementById("dodoAudio"),
+        document.getElementById("dodoAudio2"),
+      ];
+      dodoAudio[nextDodoIdx].pause();
+      dodoAudio[nextDodoIdx].currentTime = 0;
+      dodoAudio[nextDodoIdx].play();
+      nextDodoIdx = (nextDodoIdx + 1) % 2;
+    }
+
+    let nextSukoIdx = 0;
+    function playSukoAudio() {
+      const sukoAudio = [
+        document.getElementById("sukoAudio"),
+        document.getElementById("sukoAudio2"),
+      ];
+      sukoAudio[nextSukoIdx].pause();
+      sukoAudio[nextSukoIdx].currentTime = 0;
+      sukoAudio[nextSukoIdx].play();
+      nextSukoIdx = (nextSukoIdx + 1) % 2;
+    }
+
+    function playInjectionLoveAudio() {
+      const injectionLoveAudio = document.getElementById("injectionLoveAudio");
+      injectionLoveAudio.pause();
+      injectionLoveAudio.currentTime = 0;
+      injectionLoveAudio.play();
+    }
+  </script>
+</html>
